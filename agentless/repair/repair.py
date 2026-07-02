@@ -1,3 +1,13 @@
+# SSL fix for Python 3.9 on Windows (must be before datasets import)
+import ssl, certifi
+_orig_create_default_context = ssl.create_default_context
+def _patched_create_default_context(*args, **kwargs):
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.load_verify_locations(certifi.where())
+    return ctx
+ssl._create_default_https_context = _patched_create_default_context
+ssl.create_default_context = _patched_create_default_context
+
 import argparse
 import copy
 import json
@@ -864,7 +874,7 @@ def main():
         help="Index the selected samples during post-processing.",
     )
     parser.add_argument(
-        "--model", type=str, default="gpt-4o-2024-05-13", choices=["gpt-4o-2024-05-13"]
+        "--model", type=str, default="deepseek-chat"
     )
     parser.add_argument("--output_folder", type=str, required=True)
     parser.add_argument(

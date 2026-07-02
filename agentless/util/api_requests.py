@@ -1,3 +1,14 @@
+# SSL fix for Python 3.9 on Windows (bypass broken Windows cert store)
+import ssl, certifi
+_orig_create_default_context = ssl.create_default_context
+def _patched_create_default_context(*args, **kwargs):
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.load_verify_locations(certifi.where())
+    return ctx
+ssl._create_default_https_context = _patched_create_default_context
+ssl.create_default_context = _patched_create_default_context
+
+import os
 import signal
 import time
 from typing import Dict, Union
@@ -5,7 +16,22 @@ from typing import Dict, Union
 import openai
 import tiktoken
 
-client = openai.OpenAI()
+# 支持自定义 BASE_URL (如 DeepSeek)
+base_url = os.environ.get("OPENAI_BASE_URL", None)
+api_key = os.environ.get("OPENAI_API_KEY", "sk-placeholder")
+if base_url:
+    client = openai.OpenAI(api_key=api_key, base_url=base_url)
+else:
+    client = openai.OpenAI(api_key=api_key)
+
+# Windows 不支持 SIGALRM，用简单超时替代
+HAS_SIGALRM = hasattr(signal, 'SIGALRM')
+if HAS_SIGALRM:
+    def handler(signum, frame):
+        raise Exception("end of time")
+else:
+    def handler(signum, frame):
+        pass  # Windows: no-op
 
 
 def num_tokens_from_messages(message, model="gpt-3.5-turbo-0301"):
@@ -52,35 +78,37 @@ def create_chatgpt_config(
     return config
 
 
-def handler(signum, frame):
-    # swallow signum and frame
-    raise Exception("end of time")
-
-
 def request_chatgpt_engine(config):
     ret = None
     while ret is None:
         try:
-            signal.signal(signal.SIGALRM, handler)
-            signal.alarm(100)
+            if HAS_SIGALRM:
+                signal.signal(signal.SIGALRM, handler)
+                signal.alarm(100)
             ret = client.chat.completions.create(**config)
-            signal.alarm(0)
-        except openai._exceptions.BadRequestError as e:
+            if HAS_SIGALRM:
+                signal.alarm(0)
+        except openai.BadRequestError as e:
             print(e)
-            signal.alarm(0)
-        except openai._exceptions.RateLimitError as e:
+            if HAS_SIGALRM:
+                signal.alarm(0)
+            break  # 400 错误不重试
+        except openai.RateLimitError as e:
             print("Rate limit exceeded. Waiting...")
             print(e)
-            signal.alarm(0)
+            if HAS_SIGALRM:
+                signal.alarm(0)
             time.sleep(5)
-        except openai._exceptions.APIConnectionError as e:
+        except openai.APIConnectionError as e:
             print("API connection error. Waiting...")
-            signal.alarm(0)
+            if HAS_SIGALRM:
+                signal.alarm(0)
             time.sleep(5)
         except Exception as e:
             print("Unknown error. Waiting...")
             print(e)
-            signal.alarm(0)
+            if HAS_SIGALRM:
+                signal.alarm(0)
             time.sleep(1)
     return ret
 
@@ -120,13 +148,16 @@ def request_anthropic_engine(client, config):
     ret = None
     while ret is None:
         try:
-            signal.signal(signal.SIGALRM, handler)
-            signal.alarm(100)
+            if HAS_SIGALRM:
+                signal.signal(signal.SIGALRM, handler)
+                signal.alarm(100)
             ret = client.messages.create(**config)
-            signal.alarm(0)
+            if HAS_SIGALRM:
+                signal.alarm(0)
         except Exception as e:
             print("Unknown error. Waiting...")
             print(e)
-            signal.alarm(0)
+            if HAS_SIGALRM:
+                signal.alarm(0)
             time.sleep(10)
     return ret
