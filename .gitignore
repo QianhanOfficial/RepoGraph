@@ -133,3 +133,7 @@ dmypy.json
 .pyre/
 *.xml
 *.gif
+
+# data
+repo_structures/
+playground/

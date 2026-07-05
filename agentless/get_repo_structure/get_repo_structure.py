@@ -1,3 +1,13 @@
+# SSL fix for Python 3.9 on Windows (must be before datasets import)
+import ssl, certifi
+_orig_create_default_context = ssl.create_default_context
+def _patched_create_default_context(*args, **kwargs):
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.load_verify_locations(certifi.where())
+    return ctx
+ssl._create_default_https_context = _patched_create_default_context
+ssl.create_default_context = _patched_create_default_context
+
 import argparse
 import ast
 import json

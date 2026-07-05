@@ -874,7 +874,7 @@ def main():
         help="Index the selected samples during post-processing.",
     )
     parser.add_argument(
-        "--model", type=str, default="deepseek-chat"
+        "--model", type=str, default="deepseek-v4-pro"
     )
     parser.add_argument("--output_folder", type=str, required=True)
     parser.add_argument(

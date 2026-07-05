@@ -75,11 +75,51 @@ def create_chatgpt_config(
                 {"role": "user", "content": message},
             ],
         }
+    # DeepSeek 推理模型：关闭 thinking 模式，否则 content 为空
+    if "deepseek" in model.lower():
+        config["extra_body"] = {"thinking": {"type": "disabled"}}
     return config
 
 
 def request_chatgpt_engine(config):
     ret = None
+
+    # DeepSeek 不支持 n>1，自动拆分为多次独立调用
+    model = config.get("model", "")
+    batch_size = config.get("n", 1)
+    if "deepseek" in str(model).lower() and batch_size > 1:
+        # 逐个调用，合并 choices
+        single_config = {**config, "n": 1}
+        choices = []
+        total_usage = None
+        for i in range(batch_size):
+            r = None
+            while r is None:
+                try:
+                    r = client.chat.completions.create(**single_config)
+                except openai.BadRequestError as e:
+                    print(e)
+                    break
+                except openai.RateLimitError as e:
+                    print("Rate limit exceeded. Waiting...")
+                    print(e)
+                    time.sleep(5)
+                except openai.APIConnectionError as e:
+                    print("API connection error. Waiting...")
+                    time.sleep(5)
+                except Exception as e:
+                    print("Unknown error. Waiting...")
+                    print(e)
+                    time.sleep(1)
+            if r is None:
+                return None
+            choices.extend(r.choices)
+            total_usage = r.usage  # last call's usage
+        # 构造复合响应对象
+        ret = r  # 用最后一次响应做模板
+        ret.choices = choices
+        return ret
+
     while ret is None:
         try:
             if HAS_SIGALRM:
