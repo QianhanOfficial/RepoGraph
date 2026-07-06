@@ -1,4 +1,4 @@
-# RepoGraph + Agentless 实验结果报告（最终版）
+# RepoGraph + Agentless 实验结果报告
 
 > **实验日期**：2026-07-03 ~ 2026-07-05  
 > **数据集**：SWE-bench_Lite (245 个实例, 11 个仓库)  
@@ -30,6 +30,10 @@
 | Thinking 模式 | ✅ 开启 (`extra_body={"thinking": {"type": "enabled"}}`) |
 | max_tokens | 8192 (覆盖默认 1024) |
 | temperature | 已移除（thinking 模式不支持） |
+
+生成的文件/补丁等保存位置：
+
+【重要】待补全，请在这里描述生成的文件与补丁保存位置，以便于后续使用SWEbench进行准确度测试。
 
 ---
 

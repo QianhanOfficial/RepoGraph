@@ -75,13 +75,9 @@ def create_chatgpt_config(
                 {"role": "user", "content": message},
             ],
         }
-    # DeepSeek 推理模型：开启 thinking 模式，提升代码修复质量
-    # thinking tokens 和 content tokens 共享 max_tokens 额度，需设足够大
+    # DeepSeek 模型：关闭 thinking，temperature 正常使用，max_tokens=8192
     if "deepseek" in model.lower():
-        config["extra_body"] = {"thinking": {"type": "enabled"}}
-        # thinking 模式不支持 temperature 参数，移除之
-        config.pop("temperature", None)
-        # 确保 max_tokens 足够容纳 thinking + 补丁代码
+        config["extra_body"] = {"thinking": {"type": "disabled"}}
         if config["max_tokens"] < 8192:
             config["max_tokens"] = 8192
     return config

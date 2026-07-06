@@ -144,12 +144,8 @@ Here is an example:
 
 ```python
 ### mathweb/flask/app.py
-<<<<<<< SEARCH
-from flask import Flask
-=======
 import math
 from flask import Flask
->>>>>>> REPLACE
 ```
 
 Please note that the *SEARCH/REPLACE* edit REQUIRES PROPER INDENTATION. If you would like to add the line '        print(x)', you must fully write that out, with all those spaces before the code!
@@ -190,12 +186,8 @@ Here is an example:
 
 ```python
 ### mathweb/flask/app.py
-<<<<<<< SEARCH
-from flask import Flask
-=======
 import math
 from flask import Flask
->>>>>>> REPLACE
 ```
 
 Please note that the *SEARCH/REPLACE* edit REQUIRES PROPER INDENTATION. If you would like to add the line '        print(x)', you must fully write that out, with all those spaces before the code!
