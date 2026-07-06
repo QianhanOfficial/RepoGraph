@@ -1,0 +1,20 @@
+{
+    "output_folder": "results/location",
+    "output_file": "results/location\\loc_outputs_codegraph.jsonl",
+    "start_file": null,
+    "file_level": true,
+    "related_level": true,
+    "fine_grain_line_level": true,
+    "top_n": 3,
+    "temperature": 0.0,
+    "num_samples": 1,
+    "compress": true,
+    "merge": false,
+    "add_space": false,
+    "no_line_number": false,
+    "repo_graph": true,
+    "sticky_scroll": false,
+    "context_window": 10,
+    "target_id": null,
+    "mock": false
+}
